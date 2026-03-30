@@ -1,0 +1,54 @@
+import sys
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+import random
+import csv
+from datetime import datetime, timedelta
+
+from src.database import Database
+from src.paths import data_path
+
+MERCHANTS = ["Amazon", "Flipkart", "Swiggy", "Zomato", "Uber", "Netflix", "Spotify", "Myntra", "Paytm"]
+LOCATIONS = ["Delhi", "Mumbai", "Bangalore", "Chennai", "Pune", "Hyderabad", "Kolkata"]
+
+db = Database()
+db.initialize()
+
+def generate_transaction():
+    return {
+        "transaction_id": f"TXN{random.randint(100000, 999999)}",
+        "customer_id": f"CUST{random.randint(1000, 9999)}",
+        "amount": round(random.uniform(100, 25000), 2),
+        "merchant_name": random.choice(MERCHANTS),
+        "location": random.choice(LOCATIONS),
+        "date_time": (datetime.now() - timedelta(days=random.randint(0, 60))).isoformat()
+    }
+
+def generate_dataset(n=3000):
+    csv_path = data_path("raw_transactions.csv")
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(csv_path, "w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "transaction_id",
+            "customer_id",
+            "amount",
+            "merchant_name",
+            "location",
+            "date_time"
+        ])
+        writer.writeheader()
+
+        for _ in range(n):
+            txn = generate_transaction()
+
+            writer.writerow(txn)
+            db.insert_transaction(txn)
+
+if __name__ == "__main__":
+    generate_dataset(3000)
+    print("Dataset + DB populated successfully.")

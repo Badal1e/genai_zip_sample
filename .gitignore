@@ -1,0 +1,8 @@
+myvenv/
+venv/
+__pycache__/
+*.pyc
+.env
+data/disputes.sqlite
+models/*.pkl
+logs/*.jsonl
